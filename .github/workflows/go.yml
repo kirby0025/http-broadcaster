@@ -22,10 +22,14 @@ jobs:
       run: | 
         cd app/
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ../build/http-broadcaster main.go
-        cp -r log/ ../build/
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v3
       with:
         name: http-broadcaster
         path: build/
         retention-days: 30
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: build/http-broadcaster
