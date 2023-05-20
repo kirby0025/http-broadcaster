@@ -5,6 +5,8 @@ name: Go
 on:
   push:
     branches: [ "main" ]
+  release:
+    type: [published]
 jobs:
   build:
     runs-on: ubuntu-latest
