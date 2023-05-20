@@ -1,0 +1,15 @@
+[Unit]
+Description=Daemon de broadcast HTTP des purges varnish
+
+[Service]
+User={{ app_user }}
+Group={{ app_user }}
+WorkingDirectory=/opt/http-broadcaster/
+ExecStart=opt/http-broadcaster/http-broadcaster
+Type=simple
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
