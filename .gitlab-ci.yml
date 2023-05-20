@@ -1,0 +1,23 @@
+stages:
+    - lint
+    - build
+
+linter:
+    stage: lint
+    image: cytopia/golint:latest
+    script:
+        - cd app/
+        - golint main.go
+
+compile:
+    stage: build
+    image: golang:1.20.4-alpine
+    script:
+        - cd app/
+        - go get ./...
+        - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ../build/http-broadcaster main.go
+        - cp -r log/ ../build/
+    artifacts:
+        paths:
+            - build/
+        expire_in: 1 week
