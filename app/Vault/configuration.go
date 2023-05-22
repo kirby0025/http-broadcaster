@@ -1,61 +1,67 @@
-package Vault
+// Package vault provides functions to retrieve info from Hashicorp Vault
+package vault
 
 import (
-    "fmt"
-    "os"
-    vault "github.com/hashicorp/vault/api"
-    auth "github.com/hashicorp/vault/api/auth/approle"
+	"context"
+	"log"
+	"os"
+	"strings"
+
+	vault "github.com/hashicorp/vault/api"
+	auth "github.com/hashicorp/vault/api/auth/approle"
 )
 
-// getVarnishList retrieve the list of varnish servers to send PURGE to.
+// GetVarnishListFromVault retrieve the list of varnish servers to send PURGE to.
 // It uses the AppRole authentication method.
-func getVarnishList() (string, error) {
-	config := vault.DefaultConfig() // modify for more granular configuration
+// APPROLE_ROLE_ID and APPROLE_SECRET_ID are fed from environment variables.
+func GetVarnishListFromVault() []string {
+	config := vault.DefaultConfig()
+	var value []string
 
 	client, err := vault.NewClient(config)
 	if err != nil {
-		return "", fmt.Errorf("unable to initialize Vault client: %w", err)
+		log.Fatal("unable to initialize Vault client: %w", err)
+		return value
 	}
 
-        // Get roleID and secretID from ENV vars
 	roleID := os.Getenv("APPROLE_ROLE_ID")
 	if roleID == "" {
-		return "", fmt.Errorf("no role ID was provided in APPROLE_ROLE_ID env var")
+		log.Fatal("no role ID was provided in APPROLE_ROLE_ID env var")
+		return value
 	}
-	secretID := os.Getenv("APPROLE_SECRET_ID")
-	if secretID == "" {
-		return "", fmt.Errorf("no secret ID was provided in APPROLE_SECRET_ID env var")
-	}
+	secretID := &auth.SecretID{FromEnv: "APPROLE_SECRET_ID"}
 
 	appRoleAuth, err := auth.NewAppRoleAuth(
 		roleID,
 		secretID,
-		auth.WithWrappingToken(), // Only required if the secret ID is response-wrapped.
 	)
 	if err != nil {
-		return "", fmt.Errorf("unable to initialize AppRole auth method: %w", err)
+		log.Fatal("unable to initialize AppRole auth method: %w", err)
+		return value
 	}
 
 	authInfo, err := client.Auth().Login(context.Background(), appRoleAuth)
 	if err != nil {
-		return "", fmt.Errorf("unable to login to AppRole auth method: %w", err)
+		log.Fatal("unable to login to AppRole auth method: %w", err)
+		return value
 	}
 	if authInfo == nil {
-		return "", fmt.Errorf("no auth info was returned after login")
+		log.Fatal("no auth info returned after login")
+		return value
 	}
 
-	// get secret from the default mount path for KV v2 in dev mode, "secret"
 	secret, err := client.KVv2("app").Get(context.Background(), "http-broadcaster/stg/varnish_list")
 	if err != nil {
-		return "", fmt.Errorf("unable to read secret: %w", err)
+		log.Fatal("unable to read secret: %w", err)
+		return value
 	}
 
-	// data map can contain more than one key-value pair,
-	// in this case we're just grabbing one of them
-	value, ok := secret.Data["list"].(string)
+	// selecting list key from retrieved secret
+	list, ok := secret.Data["list"].(string)
 	if !ok {
-		return "", fmt.Errorf("value type assertion failed: %T %#v", secret.Data["list"], secret.Data["list"])
+		log.Fatal("value type assertion failed: %T %#v", secret.Data["list"], secret.Data["list"])
+		return value
 	}
-
-	return value, nil
+	value = strings.Split(string(list), ",")
+	return value
 }
