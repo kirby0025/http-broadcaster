@@ -15,6 +15,16 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ../build/http
 http://10.13.32.1:6081,http://10.13.32.2:6081
 ```
 
+## Configuration
+
+### Variables d'environement
+* APPROLE_ROLEID : RoleID utilisé pour se connecter à Vault.
+* APPROLE_SECRETID : SecretID utilisé pour se connecter à Vault.
+* LIST_METHOD: "vault" ou "file". Définit la méthode de construction de la liste des serveurs varnish.
+* VAULT_ADDR : Adresse du serveur Vault
+* VAULT_DATABASE : database where informations are located in Vault.
+* VAULT_PATH: path to the secrets containing the informations.
+
 ## Fonctionnalites
 
 * Génère la liste des serveurs Varnish en lisant le fichier "varnish" présent à côté du binaire ou en allant les chercher dans Vault.

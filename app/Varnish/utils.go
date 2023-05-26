@@ -31,8 +31,10 @@ func InitializeVarnishList() []string {
 // GetVarnishListFromVault builds a list of varnish servers from Vault.
 func GetVarnishListFromVault() []string {
 	var value []string
+	vaultDatabase := os.Getenv("VAULT_DATABASE")
+	vaultPath := os.Getenv("VAULT_PATH")
 	client := vault.InitVaultConnection()
-	secret, err := client.KVv2("app").Get(context.Background(), "http-broadcaster/stg/envVars")
+	secret, err := client.KVv2(vaultDatabase).Get(context.Background(), vaultPath)
 	if err != nil {
 		log.Fatal("unable to read secret: %w", err)
 		return value
