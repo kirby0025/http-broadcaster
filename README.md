@@ -10,10 +10,6 @@ cd app/
 go get ./...
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ../build/http-broadcaster main.go
 ```
-* Déposer la liste des serveurs varnish à côté du binaire, avec ce format :
-```
-http://10.13.32.1:6081,http://10.13.32.2:6081
-```
 
 ## Configuration
 
@@ -21,9 +17,13 @@ http://10.13.32.1:6081,http://10.13.32.2:6081
 * APPROLE_ROLEID : RoleID utilisé pour se connecter à Vault.
 * APPROLE_SECRETID : SecretID utilisé pour se connecter à Vault.
 * LIST_METHOD: "vault" ou "file". Définit la méthode de construction de la liste des serveurs varnish.
-* VAULT_ADDR : Adresse du serveur Vault
+* VAULT_ADDR : Adresse du serveur Vault.
 * VAULT_DATABASE : database where informations are located in Vault.
 * VAULT_PATH: path to the secrets containing the informations.
+* VARNISH_SERVERS : list of varnish servers.
+```
+http://10.13.32.1:6081,http://10.13.32.2:6081
+```
 
 ## Fonctionnalites
 
