@@ -3,12 +3,12 @@ package varnish
 
 import (
 	"context"
+	prometheus2 "http-broadcaster/Prometheus"
+	vault "http-broadcaster/Vault"
 	"log"
 	"net/http"
 	"os"
 	"strings"
-
-	vault "http-broadcaster/Vault"
 )
 
 var (
@@ -23,8 +23,10 @@ func InitializeVarnishList() []string {
 		return GetVarnishListFromVault()
 	case "file":
 		return GetVarnishListFromFile()
+	case "env":
+		return GetVarnishListFromEnv()
 	default:
-		panic("LIST_METHOD empty, no provided method to retrieve varnish list")
+		return GetVarnishListFromEnv()
 	}
 }
 
@@ -50,9 +52,18 @@ func GetVarnishListFromVault() []string {
 	return value
 }
 
+// GetVarnishListFromEnv reads the list of varnish servers from env variable VARNISH_SERVERS
+func GetVarnishListFromEnv() []string {
+	data, err := os.Getenv("VARNISH_SERVERS")
+	if err != nil {
+		log.Fatal(err)
+	}
+	sliceData := strings.Split(string(Data), ",")
+	return sliceData
+
 // GetVarnishListFromFile reads the list of varnish servers from a file on disk.
 func GetVarnishListFromFile() []string {
-	Data, err := os.ReadFile("./varnish")
+	Data, err := os.ReadFile("./varnish_list")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,9 +93,11 @@ func SendToVarnish(method string, url string, tag string) string {
 		if err != nil {
 			log.Fatal("Send new request : ", err)
 		}
+		prometheus2.IncrementBackendCounterVec(method)
 		if resp.StatusCode != 200 {
 			status = "405 Not Allowed"
 		}
+		resp.Body.Close()
 	}
 	return status
 }
