@@ -60,6 +60,7 @@ func GetVarnishListFromEnv() []string {
 	}
 	sliceData := strings.Split(string(Data), ",")
 	return sliceData
+}
 
 // GetVarnishListFromFile reads the list of varnish servers from a file on disk.
 func GetVarnishListFromFile() []string {
