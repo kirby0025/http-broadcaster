@@ -1,0 +1,18 @@
+---
+
+version: '0.1'
+services:
+    broadcaster:
+        container_name: httpbroadcaster
+        build:
+            context: ./
+            target: dev
+        ports:
+            - "6081:6081"
+        volumes:
+            - ./app/:/app/
+        networks:
+            - http-broadcaster
+networks:
+    http-broadcaster:
+        driver: bridge
